@@ -1,5 +1,7 @@
 # rpi5-security-camera
 
+Goal: Using a raspberry pi, create a secuirty camera system. It will stream footage live, and use ai to detect objects and people. Whenever it finds someone, or something, it should print it to the terminal!
+
 # Setup
 
 ### Hardware 

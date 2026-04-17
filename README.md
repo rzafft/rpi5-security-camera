@@ -2,18 +2,64 @@
 
 Goal: Using a raspberry pi, create a secuirty camera system. It will stream footage live, and use ai to detect objects and people. Whenever it finds someone, or something, it should print it to the terminal!
 
+
+<br>
+<br>
+
 # Setup
 
 ### Hardware 
 1. Core: Raspberry Pi 5 (8Gb Ram)
 2. Storage: Raspberry Pi NVMe M.2 SSD (512Gb)
 3. Storage Interface: ACASIS NVMe to USD Adapter (10 Gbps)
-4. AI Acceleration: Raspberry Pi AI Hat+ (26 Tops, Hailo 8L Accelerator)
+4. AI Acceleration: Raspberry Pi AI Hat+ (26 Tops, Hailo 8 Accelerator)
 5. Vision Input: Raspberry Pi Camera Module 3
 
 ### Additional Information
 * Operating System: Raspberry Pi OS
 * Python Installation: `\usr\bin\python3`
+
+<br>
+<br>
+
+# Understanding the AI Hat+
+
+The Raspberry Pi AI HAT+ is a hardware accelerator board. Inside it is a Hailo-8 chip, a neural network inference processor. Inference processors are used to run AI models, not train them—that typically happens on GPUs in data centers.
+
+The Hailo-8 is designed for efficient AI at the edge, meaning it runs AI locally on the device instead of sending data to the cloud. In simple terms, the AI HAT+ is a dedicated AI co-processor that sits next to the Raspberry Pi and runs neural networks extremely fast while the Pi handles everything else.
+
+It is not a GPU, not a training chip, and not something you program like a CPU. It is a model execution engine for vision AI.
+
+### Key Features of the Hailo 8L...
+
+1. 26 tops (Trillions of Operations Per Second): This means the chip can perform about 26 trillion AI operations per second, enabling real-time object detection and video inference.
+2. Very low power usage: It delivers high AI performance while consuming only a few watts, making it ideal for always-on edge devices.
+3. Desgned specifically for neural networks: Instead of running general-purpose code, it executes precompiled neural network graphs extremely efficiently using specialized hardware
+4. No external DRAM needed: The chip includes optimized on-chip memory for inference workloads, reducing reliance on external memory bandwidth and improving latency.
+5. Optimized for computer vison: It is designed primarily for image and video AI tasks such as object detection, classification, and segmentation.
+
+### How it actually works
+
+Instead of acting like a general CPU or GPU, the Hailo-8 takes a trained AI model (e.g., YOLO), compiles it into a Hailo Executable Format (.hef), and runs it through a specialized dataflow architecture.
+
+Data flows through fixed hardware pipelines rather than being dynamically executed like software on a CPU. This is what makes it extremely fast and efficient for real-time vision tasks.
+
+Instead of using PyTorch models like .pt, we load a precompiled AI model in .hef format (Hailo Executable Format), which is optimized specifically for the chip.
+
+```
+Camera frames
+   ↓
+Raspberry Pi (capture + preprocessing)
+   ↓
+Hailo AI HAT+ (runs inference)
+   ↓
+Detections returned (bounding boxes, labels, confidence)
+   ↓
+Python code decides what to do
+```
+
+<br>
+<br>
 
 # Libraries
 
@@ -68,6 +114,9 @@ Installation Notes:
 Additional Notes:
 * OpenCV depends heavily on NumPy for image data. Images are represented as NumPy arrays, and OpenCV functions operate directly on them. A common issues occures when OpenCV is installed via apt, and NumPy is installed via pip, leading to binary incompatiblity errors because OpenCv is compiled against a specific NumPy version. To fix this, run `sudo apt intall python3-numpy python3-opencv` to ensure they are fully comptabile and tested together. If you are using a venv, likewise, use `pip install numpy opencv-python`. As a general rule of thumb, dont mix apt and pip for core scientific stack unless you manage versions carefully (e.g. numpy, opencv, scipy, matplotlib)
 
+<br>
+<br>
+
 # Virtual Environment Notes
 
 Description: A virtual environment (venv) is an isolated Python environment that allows you to install and manage project-specific libraries without affecting the system-wide Python installation.
@@ -79,3 +128,4 @@ Description: A virtual environment (venv) is an isolated Python environment that
 What should NOT be installed in the env? Do NOT install system-level hardware or OS-integrated libraries inside the virtual environment, including picamera2, libcamera, system level opencv (apt version), and other os-managed hardware interfaces. 
 
 Note: For most Raspberry Pi camera and AI pipelines, it is best practice to install OpenCV and NumPy at the system level using APT (`sudo apt install python3-opencv python3-numpy`). 
+

@@ -58,6 +58,20 @@ Detections returned (bounding boxes, labels, confidence)
 Python code decides what to do
 ```
 
+### Implementation
+
+We have two options to implement the AI Hat+ into our project...
+
+1. Full Pipeline with TAPPAS (recommended, simplest)
+
+   * In this option, we use Hailo's prebuilt Gstreamer/TAPPAS pipelines
+   * Python launches a pipline and hooks into output
+     
+2. Python Controlled Inference Loop (most flexible, more complex)
+
+   * In this option, we manually control the pipeline
+   * Python grabs frams, sends them to Hailo runtime, receives detections back
+
 <br>
 <br>
 

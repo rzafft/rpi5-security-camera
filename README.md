@@ -176,9 +176,63 @@ rza@rp5-pios:~ $
 
 ```
 
-4. Run 'lsmod' to make sure the hailo chip is detected via pcei, then run 'which hailortcli' to make sure hailortcli is in /usr/bin, and then run 'hailortcli scan'. If you see "hailo devices not found', then the os sees teh pcie device but hailort cannot open it. Run 'ls /dev | grep hailo'. If you see nothing then we still need the PCIe driver. E.g. run 'sudo apt install ./hailort-pcie-driver_4.23.0_all.deb'
+4. Run 'lsmod' to make sure the hailo chip is detected via pcei, then run 'which hailortcli' to make sure hailortcli is in /usr/bin, and then run 'hailortcli scan'. If you see "hailo devices not found', then the os sees teh pcie device but hailort cannot open it. Run 'ls /dev | grep hailo'. If you see nothing then we still need the PCIe driver.
 
-5. Install the pcei driver 
+```
+rza@rp5-pios:~ $ hailortcli scan
+Hailo devices not found.
+rza@rp5-pios:~ $ ls /dev | grep hailo
+rza@rp5-pios:~ $ 
+```
+
+6. Install the pcei driver . E.g. run 'sudo apt install ./hailort-pcie-driver_4.23.0_all.deb'
+7. Reboot. E.g. run 'sudo reboot'
+8. Run The commands from step 4 to check status. You should see:
+
+```
+rza@rp5-pios:~ $ hailortcli scan
+Hailo Devices:
+[-] Device: 0001:01:00.0
+rza@rp5-pios:~ $ ls /dev | grep hailo
+hailo0
+rza@rp5-pios:~ $ 
+```
+9. Install hailort-4.23.0-cp311-cp311-linux_aarch64.whl (the python bindings). To do this we should use a virtual enviornment. this is the safe appraoch. create a venv, and install it there:
+
+```
+rza@rp5-pios:~ $ python -c 'import hailo_platform; print("Hailo Python ready")'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'hailo_platform'
+rza@rp5-pios:~ $ python3 -m venv hailo_env --system-site-packages
+rza@rp5-pios:~ $ source hailo_env/bin/activate
+(hailo_env) rza@rp5-pios:~ $ cd Downloads/
+(hailo_env) rza@rp5-pios:~/Downloads $ pip install ~/Downloads/hailort-4.23.0-cp311-cp311-linux_aarch64.whl
+Looking in indexes: https://pypi.org/simple, https://www.piwheels.org/simple
+Processing ./hailort-4.23.0-cp311-cp311-linux_aarch64.whl
+Collecting argcomplete
+  Using cached https://www.piwheels.org/simple/argcomplete/argcomplete-3.6.3-py3-none-any.whl (43 kB)
+Collecting contextlib2
+  Using cached https://www.piwheels.org/simple/contextlib2/contextlib2-21.6.0-py2.py3-none-any.whl (13 kB)
+Collecting future
+  Using cached https://www.piwheels.org/simple/future/future-1.0.0-py3-none-any.whl (491 kB)
+Collecting netaddr
+  Using cached https://www.piwheels.org/simple/netaddr/netaddr-1.3.0-py3-none-any.whl (2.3 MB)
+Collecting netifaces
+  Using cached netifaces-0.11.0.tar.gz (30 kB)
+  Preparing metadata (setup.py) ... done
+Requirement already satisfied: numpy<2 in /usr/lib/python3/dist-packages (from hailort==4.23.0) (1.24.2)
+Building wheels for collected packages: netifaces
+  Building wheel for netifaces (setup.py) ... done
+  Created wheel for netifaces: filename=netifaces-0.11.0-cp311-cp311-linux_aarch64.whl size=34958 sha256=afab47d7d9ada7cab722e0957e4392eb46eb519dbf696183acd0c53a725b48a6
+  Stored in directory: /home/rza/.cache/pip/wheels/40/85/29/648c19bbbb5f1d30e33bfb343fd7fb54296b402f7205d8e46f
+Successfully built netifaces
+Installing collected packages: netifaces, netaddr, future, contextlib2, argcomplete, hailort
+Successfully installed argcomplete-3.6.3 contextlib2-21.6.0 future-1.0.0 hailort-4.23.0 netaddr-1.3.0 netifaces-0.11.0
+(hailo_env) rza@rp5-pios:~/Downloads $ python -c 'import hailo_platform; print("Hailo Python ready")'
+Hailo Python ready
+(hailo_env) rza@rp5-pios:~/Downloads $ 
+```
 
 <br>
 <br>

@@ -102,28 +102,12 @@ You can download the hailo dataflow compiler to run AI accplications at hailo.ai
 
 Think of HailoRT as the driver + api that feeds data into the hailo chip and pulls results out. Thus, we talk to the hailo chip via HailoRT. It is the hailo runtime. It runs .hef files. 
 
-When you install HailoRT you get device drivers that let the os talk to the hailo chip, a runtime library to load .hef files and manage execution, and python bindings - what your script imports (e.g. 'import hailo_platform').
-
-First, check if you have the hailort cli installed. Run 
-
-Run 'hailortcli fw-control identify'. This command will query the connected hailo device and print its identiy info. It will output the device name (Hailo 8), serial number, board / architecture info, and more. Without HailoRT installed, we cannot reach teh device to get this info - so its a good check. 
-
 To install hailort, follow these steps:
 1. Go to the Hailo Developer Zone at https://hailo.ai/developer-zone/. Note, i created an account (ryanzafft@gmail.com)
-2. Go to the downloads page and filter on the hailo8/8l products, hailort package only, arm64 architecture, linux os, and python version 3.11 (run 'python3 --version' to check). You should see
-
-HailoRT – PCIe driver Ubuntu package (deb) (hailort-pcie-driver_4.23.0_all.deb): This is the kernel-level driver for PCIe devices, its needed so linux can talk to the hailo chip over PCIe. We need it but it is usually included or auto hanled in pi hat+ setupds. Only install it if the device is not detected. Before downloading run 'lspci'. This lists al the pci express devices connected to the system. You may see '0001:01:00.0 Co-processor: Hailo Technologies Ltd. Hailo-8 AI Processor (rev 01)'. This shows that the hailo chip is physically detected. Next, run 'lsmod'. This lists all the linux kernel modules that are currently loaded. If you don't see any lines with 'hailo', then no hailo drivers are loaded. This may not be an issues since many setups do not show a visible kernel module name. Next, run 'dmesg | grep hailo' to see the linux kernel message log (waht thte kernel has been doing since boot'). Look for lines containing hailo. If we see nothing, then no hailort driver/runtime has been installed. For now, do not install. 
-     
-HailoRT – Python package (whl) for Python 3.11, aarch64 (hailort-4.23.0-cp311-cp311-linux_aarch64.whl): This is the python api bindings for hailort. It allows things like 'import hailo_platform'. It must match our python version exactly. Before installing, run 'hailortcli --version'. If the command is not found, we need to install this step. Install it, and run the following commands to check the install:
+2. Go to the downloads page and filter on the hailo8/8l products, hailort package only, arm64 architecture, linux os, and python version 3.11 (run 'python3 --version' to check). You should see hailort-pcie-driver_4.23.0_all.deb (the kernel level driver for pcie devices), hailort-4.23.0-cp311-cp311-linux_aarch64.whl (the python bindings), and hailort_4.23.0_arm64.deb (the core runtime library).
+3. Install the runtime ('sudo apt install ./hailort_4.23.0_arm64.deb'), then run the following commands
 
 ```
-za@rp5-pios:~ $ cd Downloads/
-rza@rp5-pios:~/Downloads $ sudo apt install hailo
-hailo-all                 hailofw                   hailo-tappas-core         
-hailo-dkms                hailort                   hailo-tappas-core-3.28.2  
-rza@rp5-pios:~/Downloads $ dir
-hailort_4.23.0_arm64.deb  yolov8s.hef
-rza@rp5-pios:~/Downloads $ sudo apt install ./hailort_4.23.0_arm64.deb
 Reading package lists... Done
 Building dependency tree... Done
 Reading state information... Done
@@ -147,58 +131,54 @@ Setting up hailort (4.23.0) ...
 Do you wish to activate hailort service? (required for most pyHailoRT use cases) [y/N]: 
 Stopping hailort.service
 N: Download is performed unsandboxed as root as file '/home/rza/Downloads/hailort_4.23.0_arm64.deb' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
-rza@rp5-pios:~/Downloads $ ^C
-rza@rp5-pios:~/Downloads $ sudo systemctl enable hailort.service
-Created symlink /etc/systemd/system/multi-user.target.wants/hailort.service → /lib/systemd/system/hailort.service.
-rza@rp5-pios:~/Downloads $ sudo systemctl start hailort.service
 
-rza@rp5-pios:~/Downloads $ systemctl status hailort.service
+
+rza@rp5-pios:~ $ lspci
+0001:00:00.0 PCI bridge: Broadcom Inc. and subsidiaries BCM2712 PCIe Bridge (rev 21)
+0001:01:00.0 Co-processor: Hailo Technologies Ltd. Hailo-8 AI Processor (rev 01)
+0002:00:00.0 PCI bridge: Broadcom Inc. and subsidiaries BCM2712 PCIe Bridge (rev 21)
+0002:01:00.0 Ethernet controller: Raspberry Pi Ltd RP1 PCIe 2.0 South Bridge
+rza@rp5-pios:~ $ systemctl status hailort.service
 ● hailort.service - HailoRT service
      Loaded: loaded (/lib/systemd/system/hailort.service; enabled; preset: enabled)
-     Active: active (running) since Sat 2026-04-18 18:53:31 MDT; 21s ago
+     Active: active (running) since Sat 2026-04-18 18:59:41 MDT; 14min ago
        Docs: https://github.com/hailo-ai/hailort
-    Process: 3614 ExecStart=/usr/local/bin/hailort_service (code=exited, status=0/SUCCESS)
-    Process: 3626 ExecStartPost=/bin/sleep 0.1 (code=exited, status=0/SUCCESS)
-   Main PID: 3616 (hailort_service)
+    Process: 690 ExecStart=/usr/local/bin/hailort_service (code=exited, status=0/SUCCESS)
+    Process: 749 ExecStartPost=/bin/sleep 0.1 (code=exited, status=0/SUCCESS)
+   Main PID: 744 (hailort_service)
       Tasks: 11 (limit: 9572)
-        CPU: 10ms
+        CPU: 70ms
      CGroup: /system.slice/hailort.service
-             └─3616 /usr/local/bin/hailort_service
+             └─744 /usr/local/bin/hailort_service
 
-Apr 18 18:53:31 rp5-pios systemd[1]: Starting hailort.service - HailoRT service...
-Apr 18 18:53:31 rp5-pios systemd[1]: Started hailort.service - HailoRT service.
+Apr 18 18:59:41 rp5-pios systemd[1]: Starting hailort.service - HailoRT service...
+Apr 18 18:59:41 rp5-pios systemd[1]: Started hailort.service - HailoRT service.
+rza@rp5-pios:~ $ hailort scan
+bash: hailort: command not found
+rza@rp5-pios:~ $ 
 
-rza@rp5-pios:~/Downloads $ hailortcli fw-control identify
 
-rza@rp5-pios:~/Downloads $ which hailortcli 
-/usr/bin/hailortcli
-
-rza@rp5-pios:~/Downloads $ hailortcli fw-control identify --help
-Displays general information about the device
-Usage: hailortcli fw-control identify [OPTIONS]
-
-Options:
-  -h,--help                   Print this help message and exit
-  --extended                  Print device extended information
-
-[Option Group: Device Options]
-  Options:
-    -s,--device-id TEXT ...     Device id, same as returned from `hailortcli scan` command. For multiple devices, use space as separator.
-                                In order to run on all devices connected to the machine one-by-one, use '*' (instead of device id).
-    --bdf TEXT:BDF ...          Device bdf ([<domain>]:<bus>:<device>.<func>, same as in lspci command).
-                                For multiple BDFs, use space as separator.
-                                In order to run on all devices connected to the machine one-by-one, use '*' (instead of device id).
-    --ip TEXT:IPV4 ...          IP address of the target
-
-rza@rp5-pios:~/Downloads $ 
 ```
-     
-   * HailoRT – Ubuntu package (deb) for arm64 (hailort_4.23.0_arm64.deb): This is the core hailort runtime library. It includes the device communications, .hef loading, and inference engine. This is the main required package, without it, nothing runs on the chip.
-  
-3. Install the runtime (hailort_4.23.0_arm64.deb). Run 'sudo apt install ./hailort_4.23.0_arm64.deb'
-     
-4. 
-5. Look for hailoRT (ARM / Raspberry Pi) package (note: we do not need the DFC - that runs on x86 only)
+```
+1. lsmod: list loaded kernel modules (which drivers are active). If you see '0001:01:00.0 Co-processor: Hailo Technologies Ltd. Hailo-8 AI Processor (rev 01)', then the hailo chip is physically detected, and we likley dont need to install the driver
+
+2. dmesg | grep hailo: Print all the kernel messages (system logs) that contain 'hailo', to check if a device list the hailo chip was detected
+
+3. hailortcli fw-control identify: Query the hailo device firmware and confirm it is detected
+
+4. which hailortcli: Show where the command lives (you should see /usr/bin/hailortcli)
+
+5: lspci | grep -i hailo: confirm device is visible
+
+6. systemctl status hailort.service: check service (want to see active running)
+
+7. hailortcli scan: Should return device buss address. If you see "hailo devices not found', then the os sees teh pcie device but hailort cannot open it.
+
+```
+
+4. Run 'lsmod' to make sure the hailo chip is detected via pcei, then run 'which hailortcli' to make sure hailortcli is in /usr/bin, and then run 'hailortcli scan'. If you see "hailo devices not found', then the os sees teh pcie device but hailort cannot open it. Run 'ls /dev | grep hailo'. If you see nothing then we still need the PCIe driver. E.g. run 'sudo apt install ./hailort-pcie-driver_4.23.0_all.deb'
+
+5. Install the pcei driver 
 
 <br>
 <br>

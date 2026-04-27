@@ -9,6 +9,90 @@ Terminology and Definitions:
 6. Virtual Device
 """
 
+COCO_CLASSES = {
+	0: '__background__',
+	1: 'person',
+	2: 'bicycle',
+	3: 'car',
+	4: 'motorcycle',
+	5: 'airplane',
+	6: 'bus',
+	7: 'train',
+	8: 'truck',
+	9: 'boat',
+	10: 'traffic light',
+	11: 'fire hydrant',
+	12: 'stop sign',
+	13: 'parking meter',
+	14: 'bench',
+	15: 'bird',
+	16: 'cat',
+	17: 'dog',
+	18: 'horse',
+	19: 'sheep',
+	20: 'cow',
+	21: 'elephant',
+	22: 'bear',
+	23: 'zebra',
+	24: 'giraffe',
+	25: 'backpack',
+	26: 'umbrella',
+	27: 'handbag',
+	28: 'tie',
+	29: 'suitcase',
+	30: 'frisbee',
+	31: 'skis',
+	32: 'snowboard',
+	33: 'sports ball',
+	34: 'kite',
+	35: 'baseball bat',
+	36: 'baseball glove',
+	37: 'skateboard',
+	38: 'surfboard',
+	39: 'tennis racket',
+	40: 'bottle',
+	41: 'wine glass',
+	42: 'cup',
+	43: 'fork',
+	44: 'knife',
+	45: 'spoon',
+	46: 'bowl',
+	47: 'banana',
+	48: 'apple',
+	49: 'sandwich',
+	50: 'orange',
+	51: 'broccoli',
+	52: 'carrot',
+	53: 'hot dog',
+	54: 'pizza',
+	55: 'donut',
+	56: 'cake',
+	57: 'chair',
+	58: 'couch',
+	59: 'potted plant',
+	60: 'bed',
+	61: 'dining table',
+	62: 'toilet',
+	63: 'tv',
+	64: 'laptop',
+	65: 'mouse',
+	66: 'remote',
+	67: 'keyboard',
+	68: 'cell phone',
+	69: 'microwave',
+	70: 'oven',
+	71: 'toaster',
+	72: 'sink',
+	73: 'refrigerator',
+	74: 'book',
+	75: 'clock',
+	76: 'vase',
+	77: 'scissors',
+	78: 'teddy bear',
+	79: 'hair drier',
+	80: 'toothbrush'
+}
+
 
 import os 
 
@@ -67,7 +151,7 @@ print("batch size (bytes):", batch_of_processed_frames.nbytes)
 
 """ 
 ===========================================================================================
-(3) Load the model, configure the device, define input/output stream info and configuraiton
+(3) Load the model, configure the device, define input/output stream info/configuration, and activate model
 ===========================================================================================
 """
 
@@ -141,10 +225,59 @@ with hailo.VDevice() as target:
 				
 			print("\n================ INFERENCE =================")
 
+			""" 
+			===========================================================================================
+			(4) Prepare input buffer and run inference
+			===========================================================================================
+			"""
 			# (4.1) Create a dictionary that packages input image(s) so they can be fed into the model inference pipeline
 			input_data = {input_vstream_info.name: batch_of_processed_frames}
 			# (4.2) Run inference (i.e. execute the neural network) on the input image batch and collect outputs
 			results = infer_pipeline.infer(input_data)
+
+			""" 
+			===========================================================================================
+			(5) Parse output
+			The yolov8s.hef model is prebuilt and compiled (available for download via the Hailo Model Zoo).
+			It returns a single output stream: Class Seperated NMS Output formatted as:
+
+			infer_pipeline.infer(input_data) = results = {
+				"yolov8s/yolov8_nms_postprocess": [
+					[ 		
+					   inputImg0_class_1_detections,
+					   inputImg0_class_2_detections,
+					   inputImg0_class_3_detections,
+					   ...
+					   inputImg0_class_79_detections
+					],
+					[ 	   
+				   	   inputImg1_class_1_detections,
+					   inputImg1_class_2_detections,
+					   inputImg1_class_3_detections,
+					   ...
+					   inputImg1_class_79_detections
+					],  
+					...   
+					[ 	   
+				   	   inputImgN_class_1_detections,
+					   inputImgN_class_2_detections,
+					   inputImgN_class_3_detections,
+					   ...
+					   inputImgN_class_79_detections
+					],  
+				]
+			}
+
+			Each class detection contains a list. If a detction is found, it looks like 
+			[y1, x1, y2, x2, score] where (x1,y1) = top left corner of detection box and 
+			(x2,y2) = bottom right corner of detection box, such that, if (x1,y1)=(0.21,0.20), 
+			then the top left corner of the detection box is 21% from the left edge of img, 
+			and 20% from the top of the img.
+
+			Note: Each image result contains 0 or more detctions for each of the 80 COCO classes.
+			===========================================================================================
+			"""
+			
 			image0_results = results["yolov8s/yolov8_nms_postprocess"][0]
 			detections = []
 			for group in image0_results:

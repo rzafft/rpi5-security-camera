@@ -24,21 +24,18 @@ Goal: Using a raspberry pi, create a secuirty camera system. It will stream foot
 
 <br><br>
 
-# Picking a Object Detection Model (Downloading YOLOv8 .hef file) 
+# Picking a Object Detection Model
+
 
 For this project we will use the YOLOv8 object detection model. We will download it from the Hailo Model Zoo, a collection of ready-to-use models that are already compiled in .hef format. 
 
-Go to Hailo's official model zoo at https://github.com/hailo-ai/hailo_model_zoo. In README.md, you can find links to object detection models specifically for the Hailo 8 chip (compatibility matters). You can also just go to docs/public_models/hailo8/hail08_object_detection.rst. Here you will find a table where each row is a object detection model for the hailo 8 chip that was compiled using the hailo dataflow compiler (DFC). We should see the following rows:
+Go to Hailo's official model zoo and find the yolov8 object detection models for the Hailo8 chip: https://github.com/hailo-ai/hailo_model_zoo/blob/master/docs/public_models/HAILO8/HAILO8_object_detection.rst
 
-* yolov8x⭐: slowest, most accurate
-* yolov8l⭐: slow, accurate
-* yolov8m⭐: balenced speed and accuracy
-* yolov8s⭐: faster, less accurate 
-* yolov8n⭐: fastst, least accurate
+Download the .hef file for the YoloV8s. This is a smaller, faster, but less accurate version of the YoloV8 object detection model. If we wanted the most accurate model, we could download yolov8x. 
 
-Choose the yolov8s varient. This is the 'small' version of YOLOv8. It should have the following metrics. 
+The YoloV8s model has the following metrics. ...
 
-* Network Name: yolov8s⭐
+* Network Name: yolov8s
 * Float Mean Average Precision / Accuray before optimization (floatmAp): 44.6
 * Hardware Mean Average Precision / Accuracy after compiling for Hailo (HardwaremAP): 44.0
 * FPS (Batch size = 1) / How many frames can the chip process per second: 491

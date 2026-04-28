@@ -22,87 +22,86 @@ Terminology and Definitions:
 
 # COCO dataset class mapping (model output index → human-readable label)
 COCO_CLASSES = {
-	0: '__background__',
-	1: 'person',
-	2: 'bicycle',
-	3: 'car',
-	4: 'motorcycle',
-	5: 'airplane',
-	6: 'bus',
-	7: 'train',
-	8: 'truck',
-	9: 'boat',
-	10: 'traffic light',
-	11: 'fire hydrant',
-	12: 'stop sign',
-	13: 'parking meter',
-	14: 'bench',
-	15: 'bird',
-	16: 'cat',
-	17: 'dog',
-	18: 'horse',
-	19: 'sheep',
-	20: 'cow',
-	21: 'elephant',
-	22: 'bear',
-	23: 'zebra',
-	24: 'giraffe',
-	25: 'backpack',
-	26: 'umbrella',
-	27: 'handbag',
-	28: 'tie',
-	29: 'suitcase',
-	30: 'frisbee',
-	31: 'skis',
-	32: 'snowboard',
-	33: 'sports ball',
-	34: 'kite',
-	35: 'baseball bat',
-	36: 'baseball glove',
-	37: 'skateboard',
-	38: 'surfboard',
-	39: 'tennis racket',
-	40: 'bottle',
-	41: 'wine glass',
-	42: 'cup',
-	43: 'fork',
-	44: 'knife',
-	45: 'spoon',
-	46: 'bowl',
-	47: 'banana',
-	48: 'apple',
-	49: 'sandwich',
-	50: 'orange',
-	51: 'broccoli',
-	52: 'carrot',
-	53: 'hot dog',
-	54: 'pizza',
-	55: 'donut',
-	56: 'cake',
-	57: 'chair',
-	58: 'couch',
-	59: 'potted plant',
-	60: 'bed',
-	61: 'dining table',
-	62: 'toilet',
-	63: 'tv',
-	64: 'laptop',
-	65: 'mouse',
-	66: 'remote',
-	67: 'keyboard',
-	68: 'cell phone',
-	69: 'microwave',
-	70: 'oven',
-	71: 'toaster',
-	72: 'sink',
-	73: 'refrigerator',
-	74: 'book',
-	75: 'clock',
-	76: 'vase',
-	77: 'scissors',
-	78: 'teddy bear',
-	79: 'hair drier',
-	80: 'toothbrush'
+    0: 'person',
+    1: 'bicycle',
+    2: 'car',
+    3: 'motorcycle',
+    4: 'airplane',
+    5: 'bus',
+    6: 'train',
+    7: 'truck',
+    8: 'boat',
+    9: 'traffic light',
+    10: 'fire hydrant',
+    11: 'stop sign',
+    12: 'parking meter',
+    13: 'bench',
+    14: 'bird',
+    15: 'cat',
+    16: 'dog',
+    17: 'horse',
+    18: 'sheep',
+    19: 'cow',
+    20: 'elephant',
+    21: 'bear',
+    22: 'zebra',
+    23: 'giraffe',
+    24: 'backpack',
+    25: 'umbrella',
+    26: 'handbag',
+    27: 'tie',
+    28: 'suitcase',
+    29: 'frisbee',
+    30: 'skis',
+    31: 'snowboard',
+    32: 'sports ball',
+    33: 'kite',
+    34: 'baseball bat',
+    35: 'baseball glove',
+    36: 'skateboard',
+    37: 'surfboard',
+    38: 'tennis racket',
+    39: 'bottle',
+    40: 'wine glass',
+    41: 'cup',
+    42: 'fork',
+    43: 'knife',
+    44: 'spoon',
+    45: 'bowl',
+    46: 'banana',
+    47: 'apple',
+    48: 'sandwich',
+    49: 'orange',
+    50: 'broccoli',
+    51: 'carrot',
+    52: 'hot dog',
+    53: 'pizza',
+    54: 'donut',
+    55: 'cake',
+    56: 'chair',
+    57: 'couch',
+    58: 'potted plant',
+    59: 'bed',
+    60: 'dining table',
+    61: 'toilet',
+    62: 'tv',
+    63: 'laptop',
+    64: 'mouse',
+    65: 'remote',
+    66: 'keyboard',
+    67: 'cell phone',
+    68: 'microwave',
+    69: 'oven',
+    70: 'toaster',
+    71: 'sink',
+    72: 'refrigerator',
+    73: 'book',
+    74: 'clock',
+    75: 'vase',
+    76: 'scissors',
+    77: 'teddy bear',
+    78: 'hair drier',
+    79: 'toothbrush'
 }
 
 
@@ -116,6 +115,8 @@ import hailo_platform as hailo
 import cv2
 import numpy as np
 
+detections = []
+
 """ 
 ===========================================================================================
 (1) Load an image into memory
@@ -123,7 +124,7 @@ import numpy as np
 """
 
 # (1.1) Load/store image as a NumPy array
-frame = cv2.imread("test_RGB.png")
+frame = cv2.imread("images/test_RGB.png")
 # (1.2) Convert the image's color format from BGR to RGB
 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -284,18 +285,29 @@ with hailo.VDevice() as target:
 			If no objects of that class are found the list should be empty. 
 			"""
 			
-			image0_results = results["yolov8s/yolov8_nms_postprocess"][0]
-			detections = []
-			for group in image0_results:
-				for detection in group:
-					if len(detection) == 5:
-						# (x1,y1) = topleft, (x2,y2) = bottomright
-						# if (x1,y1) = (0.21, 0.20), then the top left corner of the detection box is 21% from the left edge of img, and 20% from the top of the img
-						x1, y1, x2, y2, confidence = detection
-						detections.append((x1, y1, x2, y2, confidence))
-				
-			
+			image_results = results["yolov8s/yolov8_nms_postprocess"]
+			for i, image_result in enumerate(image_results):
+				for j, class_detections in enumerate(image_result):
+					coco_class = COCO_CLASSES[j]
+					for k, detection in enumerate(class_detections):
+						if len(detection) == 5:
+							y1, x1, y2, x2, confidence = detection
+							if confidence < 0.5:
+								continue
+							detections.append((y1, x1, y2, x2, confidence, coco_class))
 
+h, w = frame.shape[:2]
+for y1, x1, y2, x2, conf, label in detections:
+	print(f"Detected {label} with {conf:.2f} confidence at ({x1:.2f}, {y1:.2f}, {x2:.2f}, {y2:.2f})")
+	x1 = int(x1 * w)
+	x2 = int(x2 * w)
+	y1 = int(y1 * h)
+	y2 = int(y2 * h)
+	cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+	text = f"{label} {conf:.2f}"
+	cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+	
+				
 cv2.imshow("Test Image", frame)
 while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
